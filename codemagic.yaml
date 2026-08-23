@@ -1,0 +1,27 @@
+workflows:
+  morad-app-android-workflow:
+    name: MORAD_TK Android Workflow
+    max_build_duration: 30
+    environment:
+      flutter: stable
+      groups:
+        # يمكنك إضافة مفاتيح التوقيع لاحقاً إذا أردت (Keystore)
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Flutter analyze
+        script: |
+          flutter analyze
+      - name: Build APK release
+        script: |
+          flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+    publishing:
+      email:
+        recipients:
+          - your_email@example.com # ضع بريدك الإلكتروني هنا لاستلام النسخة
+        notify:
+          success: true
+          failure: true

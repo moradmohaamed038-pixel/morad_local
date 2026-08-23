@@ -1,0 +1,115 @@
+# ============================================================================
+# CODEMAGIC CONFIGURATION FOR MORAD_TK
+# ============================================================================
+
+# Version of the config file
+workflows:
+  # ============================================================================
+  # Workflow 1: Android APK Release Build
+  # ============================================================================
+  android-release:
+    name: Android Release Build
+    instance_type: mac_mini
+    max_build_duration: 60
+
+    environment:
+      flutter: stable
+      java: 11
+      xcode: latest
+
+    scripts:
+      # ======================================================================
+      # 1. Install Dependencies
+      # ======================================================================
+      - name: Install Dependencies
+        script: |
+          flutter pub get
+
+      # ======================================================================
+      # 2. Analyze Code
+      # ======================================================================
+      - name: Analyze Code
+        script: |
+          flutter analyze
+
+      # ======================================================================
+      # 3. Build APK
+      # ======================================================================
+      - name: Build APK
+        script: |
+          flutter build apk --release --split-per-abi
+        env:
+          ANDROID_SIGNING_KEY: $ANDROID_SIGNING_KEY
+          ANDROID_SIGNING_KEY_PASSWORD: $ANDROID_SIGNING_KEY_PASSWORD
+          ANDROID_KEYSTORE_PASSWORD: $ANDROID_KEYSTORE_PASSWORD
+
+    artifacts:
+      - build/app/outputs/flutter-apk/**/*.apk
+
+    publishing:
+      # ======================================================================
+      # Publish to Google Play
+      # ======================================================================
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        release_type: inAppUpdate
+
+  # ============================================================================
+  # Workflow 2: Android Bundle for Play Store
+  # ============================================================================
+  android-bundle:
+    name: Android App Bundle
+    instance_type: mac_mini
+    max_build_duration: 60
+
+    environment:
+      flutter: stable
+      java: 11
+
+    scripts:
+      - name: Install Dependencies
+        script: flutter pub get
+
+      - name: Build App Bundle
+        script: |
+          flutter build appbundle --release
+        env:
+          ANDROID_SIGNING_KEY: $ANDROID_SIGNING_KEY
+          ANDROID_SIGNING_KEY_PASSWORD: $ANDROID_SIGNING_KEY_PASSWORD
+          ANDROID_KEYSTORE_PASSWORD: $ANDROID_KEYSTORE_PASSWORD
+
+    artifacts:
+      - build/app/outputs/bundle/release/app-release.aab
+
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+
+  # ============================================================================
+  # Workflow 3: iOS Build (اختياري)
+  # ============================================================================
+  ios-release:
+    name: iOS Release Build
+    instance_type: mac_mini
+    max_build_duration: 60
+
+    environment:
+      flutter: stable
+      xcode: latest
+
+    scripts:
+      - name: Install Dependencies
+        script: flutter pub get
+
+      - name: Build iOS
+        script: |
+          flutter build ios --release --no-codesign
+
+    artifacts:
+      - build/ios/Release-iphoneos/
+
+    publishing:
+      app_store_connect:
+        auth: $APP_STORE_CONNECT_CREDENTIALS
